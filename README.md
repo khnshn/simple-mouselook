@@ -1,5 +1,7 @@
 # Simple ThreeJS Mouse Look
 A very simple simulation of mouse look without using pointer lock API.
+Try right and left click to see interactions.
+
 ![ScreenShot 1](https://github.com/khnshn/threejs-simple-mouselook/blob/master/screenshots/screenshot_1.png)
 ## Related Links
 - [ThreeJS](https://threejs.org/ "ThreeJS")
