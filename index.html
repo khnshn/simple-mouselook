@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple MouseLook</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        #hud {
+            position: absolute;
+            z-index: 100;
+            bottom: 0;
+            left: 0;
+            width: 300px;
+            overflow: hidden;
+            border: 1px solid white;
+            margin: 5px;
+            padding: 2px;
+        }
+
+        #hud * {
+            color: #ffffff;
+        }
+
+        #hud p {
+            text-align: center;
+        }
+
+        #aim {
+            position: absolute;
+            background-color: white;
+            width: 3px;
+            height: 3px;
+            top: 50%;
+            left: 50%;
+            border-radius: 5px;
+        }
+
+        .clickFire {
+            animation-name: dotClickFire;
+            animation-duration: 100ms;
+        }
+
+        .clickInteract {
+            animation-name: dotClickInteract;
+            animation-duration: 100ms;
+        }
+
+        @keyframes dotClickFire {
+            0% {
+                width: 3px;
+                height: 3px;
+                background-color: #fff;
+                left: 50%;
+                top: 50%;
+            }
+            50% {
+                width: 15px;
+                height: 15px;
+                background-color: #ff0000;
+                left: 49.6%;
+                top: 49.4%;
+            }
+            100% {
+                width: 3px;
+                height: 3px;
+                background-color: #fff;
+                left: 50%;
+                top: 50%;
+            }
+        }
+
+        @keyframes dotClickInteract {
+            0% {
+                width: 3px;
+                height: 3px;
+                background-color: #fff;
+                left: 50%;
+                top: 50%;
+            }
+            50% {
+                width: 15px;
+                height: 15px;
+                background-color: #0000ff;
+                left: 49.6%;
+                top: 49.4%;
+            }
+            100% {
+                width: 3px;
+                height: 3px;
+                background-color: #fff;
+                left: 50%;
+                top: 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="aim"></div>
+<div id="hud">
+    <p>HUD</p>
+    <table>
+        <tr>
+            <td>Rotation x:</td>
+            <td id="x"></td>
+        </tr>
+        <tr>
+            <td>Rotation y:</td>
+            <td id="y"></td>
+        </tr>
+        <tr>
+            <td>Mouse x:</td>
+            <td id="mX"></td>
+        </tr>
+        <tr>
+            <td>Mouse y:</td>
+            <td id="mY"></td>
+        </tr>
+    </table>
+</div>
+<script src="js/three.js"></script>
+<script>
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, .1, 1000);
+    var renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    var geometry = new THREE.BoxGeometry(1, 1, 1);
+    var material = new THREE.MeshLambertMaterial({color: 0xff7b00});
+    var cube = new THREE.Mesh(geometry, material);
+    cube.rotation.y = .5;
+    cube.rotation.x = .5;
+    scene.add(cube);
+    camera.position.z = 5;
+    var light = new THREE.PointLight(0xf9ff99, 5, 5, 1);
+    light.position.set(2, 2, 2);
+    scene.add(light);
+    light = new THREE.AmbientLight(0xffffff, .1);
+    scene.add(light);
+    var camX = 0, xPrev = -1, yPrev = -1, camY = 0, camReset = false, keepGoing = false;
+    document.addEventListener('mousemove', function (ev) {
+        document.getElementById('mX').innerHTML = ev.clientX.toString();
+        document.getElementById('mY').innerHTML = ev.clientY.toString();
+        if (xPrev === -1 && yPrev === -1) {
+            xPrev = ev.clientX;
+            yPrev = ev.clientY;
+        }
+        if (ev.clientX < 50) {
+            camY = 1;
+            keepGoing = true;
+        } else if (ev.clientX > window.innerWidth - 50) {
+            camY = -1;
+            keepGoing = true;
+        } else {
+            keepGoing = false;
+            if (xPrev < ev.clientX) {
+                camY = -1;
+            } else if (xPrev > ev.clientX) {
+                camY = 1;
+            }
+            if (yPrev < ev.clientY) {
+                camX = -1;
+            } else if (yPrev > ev.clientY) {
+                camX = 1;
+            }
+        }
+        xPrev = ev.clientX;
+        yPrev = ev.clientY;
+    });
+    document.addEventListener('mouseout', function () {
+        camX = camY = 0;
+    });
+    document.addEventListener('keypress', function (ev) {
+        if (ev.which === 114) {
+            camReset = true;
+        }
+    });
+    document.addEventListener('click', function (ev) {
+        if (ev.which === 1) {
+            document.getElementById('aim').className = 'clickFire';
+            window.setTimeout(function () {
+                document.getElementById('aim').classList.remove('clickFire');
+            }, 100);
+        } else if (ev.which === 3) {
+            document.getElementById('aim').className = 'clickInteract';
+            window.setTimeout(function () {
+                document.getElementById('aim').classList.remove('clickInteract');
+            }, 100);
+        }
+    });
+    document.addEventListener('contextmenu', function (ev) {
+        ev.preventDefault();
+    });
+    window.addEventListener('resize', function () {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        camera.rotation.y += camY / 50;
+        camera.rotation.x += camX / 50;
+        document.getElementById('x').innerHTML = camera.rotation.x;
+        document.getElementById('y').innerHTML = camera.rotation.y;
+        if (camReset) {
+            camera.lookAt(scene.position);
+            camReset = false;
+        }
+        if (!keepGoing) {
+            camX = camY = 0;
+        } else {
+            camX = 0;
+        }
+        renderer.render(scene, camera);
+    }
+
+    animate();
+</script>
+</body>
+</html>
